@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K-DRAMA DATABASE | Korean Drama Guide</title>
+<style>
+:root{
+  --bg:#f7f5f2; --card:#fff; --text:#202020; --muted:#777;
+  --line:#e7e2dc; --accent:#8f6a5b; --accent2:#efe5df;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Sans",sans-serif}
+header{padding:56px 20px 44px;background:#fff;border-bottom:1px solid var(--line)}
+.hero{max-width:1100px;margin:auto}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--accent);font-weight:700}
+h1{font-size:clamp(34px,7vw,64px);line-height:1;margin:12px 0}
+.sub{color:var(--muted);font-size:15px}
+main{max-width:1100px;margin:0 auto;padding:28px 20px 70px}
+.searchbar{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:18px;padding:14px;position:sticky;top:0;z-index:20;box-shadow:0 8px 25px rgba(0,0,0,.06);backdrop-filter:blur(10px)}
+.filtersPanel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:12px;box-shadow:0 8px 25px rgba(0,0,0,.04)}
+.search{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:12px;font-size:16px;outline:none}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;cursor:pointer;font-size:13px}
+button.active{background:var(--text);color:#fff;border-color:var(--text)}
+.meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:24px 2px 12px;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;min-height:150px;transition:.15s}
+.cardBody{display:flex;gap:14px;align-items:flex-start}
+.poster{width:86px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;flex:0 0 auto;background:var(--accent2)}
+.posterPlaceholder{width:86px;aspect-ratio:2/3;border-radius:10px;flex:0 0 auto;background:var(--accent2);display:grid;place-items:center;color:#a68f84;font-size:10px;text-align:center;padding:8px}
+.cardText{min-width:0;flex:1}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.06)}
+.year{font-size:12px;color:var(--muted)}
+.title{font-size:18px;font-weight:700;line-height:1.45;margin:7px 0 10px}
+.type{display:inline-block;background:var(--accent2);color:var(--accent);font-size:11px;padding:4px 8px;border-radius:999px;margin-bottom:12px}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11px;color:#666;border:1px solid var(--line);padding:3px 7px;border-radius:999px}
+.empty{padding:50px 10px;text-align:center;color:var(--muted)}
+footer{max-width:1100px;margin:0 auto;padding:0 20px 50px;color:#999;font-size:12px}
+.note{margin-top:12px;color:#999;font-size:12px;line-height:1.6}
+
+.card{cursor:pointer}
+.card:active{transform:scale(.99)}
+.detailOverlay{
+  position:fixed;inset:0;background:rgba(36,28,24,.45);z-index:1000;
+  display:none;align-items:flex-end;justify-content:center;padding:0;
+}
+.detailOverlay.open{display:flex}
+.detailPanel{
+  width:min(720px,100%);max-height:92vh;overflow:auto;background:#fffaf7;
+  border-radius:24px 24px 0 0;padding:18px 18px 34px;box-shadow:0 -12px 40px rgba(0,0,0,.16);
+}
+.detailTop{display:flex;justify-content:flex-end;position:sticky;top:0;z-index:2}
+.detailClose{
+  border:0;background:#efe5df;width:38px;height:38px;border-radius:50%;
+  font-size:22px;line-height:1;cursor:pointer;
+}
+.detailHero{display:flex;gap:18px;align-items:flex-start;margin-top:4px}
+.detailPoster{width:120px;aspect-ratio:2/3;object-fit:cover;border-radius:14px;background:var(--accent2);flex:0 0 auto}
+.detailPosterPlaceholder{width:120px;aspect-ratio:2/3;border-radius:14px;background:var(--accent2);display:grid;place-items:center;color:#9b887e;flex:0 0 auto}
+.detailInfo{min-width:0}
+.detailYear{font-size:12px;color:#9b887e;margin-bottom:6px}
+.detailTitle{font-size:24px;font-weight:800;line-height:1.35;margin-bottom:8px}
+.detailMeta{font-size:13px;color:#77665d;line-height:1.7}
+.detailSection{margin-top:24px}
+.detailSection h3{font-size:15px;margin:0 0 9px}
+.detailSection p{margin:0;line-height:1.85;font-size:14px;color:#4e433e;white-space:pre-wrap}
+.detailCast{display:flex;gap:8px;flex-wrap:wrap}
+.detailCast span{font-size:12px;background:#efe5df;border-radius:999px;padding:7px 10px}
+.detailLoading{text-align:center;padding:36px 10px;color:#8b776d}
+@media(min-width:721px){
+  .detailOverlay{align-items:center;padding:28px}
+  .detailPanel{border-radius:24px;max-height:88vh}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="hero">
+    <div class="eyebrow">K-DRAMA DATABASE / PROTOTYPE</div>
+    <h1>韓ドラを、もっと探しやすく。</h1>
+    <div class="sub">年代・ジャンル・作品の特徴から韓国ドラマを探すためのデータベース</div>
+  </div>
+</header>
+
+<main>
+  <section class="controls">
+    <div style="display:flex;gap:8px"><input id="search" class="search" type="search" placeholder="作品名を検索…"><button id="searchBtn" style="white-space:nowrap;border-radius:12px;padding:0 18px;background:#202020;color:#fff;border-color:#202020">検索</button></div>
+    <div id="yearFilters" class="filters"></div>
+    <div id="typeFilters" class="filters"></div>
+    <div id="tagFilters" class="filters"></div>
+    <div class="note">※ 現在はスプレッドシートの初期データから作った試作品。特徴・類似作品はこれから追加できます。</div>
+  </section>
+
+  <div class="meta">
+    <span id="count"></span>
+    <span>初期登録作品</span>
+  </div>
+  <section id="grid" class="grid"></section>
+  <div id="empty" class="empty" style="display:none">条件に合う作品がありません。</div>
+</main>
+
+<footer>
+  K-DRAMA DATABASE — prototype<br><span style="display:inline-block;margin-top:8px">This product uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span>
+</footer>
+
+
+<div id="detailOverlay" class="detailOverlay" aria-hidden="true">
+  <section class="detailPanel" role="dialog" aria-modal="true" aria-label="作品詳細">
+    <div class="detailTop">
+      <button id="detailClose" class="detailClose" type="button" aria-label="閉じる">×</button>
+    </div>
+    <div id="detailContent"></div>
+  </section>
+</div>
+
+<script>
+const dramas = [{"title": "18アゲイン", "year": "2020年", "type": "長編", "tags": ["恋愛", "家族", "青春", "学生", "コメディ", "ファンタジー"]}, {"title": "生まれ変わってもよろしく", "year": "2023年", "type": "長編", "tags": ["恋愛", "ファンタジー"]}, {"title": "弱いヒーロー", "year": "2022年", "type": "長編", "tags": ["青春", "学生", "サスペンス", "アクション"]}, {"title": "ソンジェ背負って走れ", "year": "2024年", "type": "長編", "tags": ["恋愛", "青春", "学生", "サスペンス", "コメディ", "ファンタジー"]}, {"title": "組み立て式家族", "year": "2024年", "type": "長編", "tags": ["恋愛", "家族", "青春", "学生", "コメディ"]}, {"title": "太陽の末裔", "year": "2016年", "type": "長編", "tags": ["恋愛", "コメディ", "アクション"]}, {"title": "奇跡の兄弟", "year": "2023年", "type": "長編", "tags": ["家族", "学生", "サスペンス", "ミステリー", "ファンタジー", "アクション"]}, {"title": "あなたが眠っている間に", "year": "2017年", "type": "長編", "tags": ["恋愛", "サスペンス", "ミステリー", "ファンタジー"]}, {"title": "輝くウォーターメロン", "year": "2023年", "type": "長編", "tags": ["恋愛", "家族", "青春", "学生", "コメディ", "ファンタジー"]}, {"title": "ヴィンチェンツォ", "year": "2021年", "type": "長編", "tags": ["家族", "サスペンス", "コメディ", "アクション"]}, {"title": "財閥家の末息子", "year": "2022年", "type": "長編", "tags": ["家族", "学生", "サスペンス", "ファンタジー", "アクション"]}, {"title": "恋愛至上主義区域", "year": "2024年", "type": "短編", "tags": ["恋愛", "青春", "学生", "コメディ", "ファンタジー"]}, {"title": "ここにきて抱きしめて", "year": "2018年", "type": "長編", "tags": ["恋愛", "家族", "学生", "サスペンス"]}, {"title": "良くも、悪くも、だって母親", "year": "2023年", "type": "長編", "tags": ["家族", "サスペンス", "コメディ"]}, {"title": "2人の恋は場合の数", "year": "2020年", "type": "長編", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "まぶしくて私たちの輝く時間", "year": "2019年", "type": "長編", "tags": ["恋愛", "家族", "青春", "ミステリー", "コメディ", "ファンタジー"]}, {"title": "となりのMr.パーフェクト", "year": "2024年", "type": "長編", "tags": ["恋愛", "家族", "青春", "コメディ"]}, {"title": "秘密の間柄", "year": "2025年", "type": "短編", "tags": ["恋愛", "学生"]}, {"title": "俺は恋愛なんか求めてない！", "year": "2023年", "type": "短編", "tags": ["恋愛", "コメディ"]}, {"title": "ナミブ-砂漠と海の夢-", "year": "2024年", "type": "長編", "tags": ["家族", "学生", "コメディ"]}, {"title": "セマンティックエラー", "year": "2022年", "type": "短編", "tags": ["恋愛", "学生", "コメディ"]}, {"title": "8番目の感覚", "year": "2023年", "type": "短編", "tags": ["恋愛", "青春", "学生"]}, {"title": "天気予報のような恋愛", "year": "2023年", "type": "短編", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "テコンドーの呪いを解いて", "year": "2024年", "type": "短編", "tags": ["恋愛", "青春", "学生", "アクション"]}, {"title": "僕らの恋愛シミュレーション", "year": "2023年", "type": "短編", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "To My Star", "year": "2021年（S1）/2022年（S2）", "type": "短編", "tags": ["恋愛", "青春", "コメディ"]}, {"title": "Blueming〜君に染まる", "year": "2022年", "type": "短編", "tags": ["恋愛", "青春", "学生"]}, {"title": "君の唇を噛みたい", "year": "2022年", "type": "短編", "tags": ["恋愛", "青春", "学生", "ファンタジー"]}, {"title": "君の視線が止まる先に", "year": "2020年", "type": "短編", "tags": ["恋愛", "青春", "学生"]}, {"title": "ONCE AGAIN", "year": "2022年", "type": "短編", "tags": ["恋愛", "ファンタジー"]}, {"title": "JunとJun", "year": "2023年", "type": "短編", "tags": ["恋愛", "コメディ"]}, {"title": "新入社員", "year": "2022年", "type": "短編", "tags": ["恋愛", "コメディ"]}, {"title": "ラブトラクター", "year": "2023年", "type": "短編", "tags": ["恋愛", "青春", "コメディ"]}, {"title": "推しが現れた!?", "year": "2022年", "type": "短編", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "ああっ！僕のアシさま", "year": "2022年", "type": "短編", "tags": ["恋愛", "コメディ"]}, {"title": "ジャズのように", "year": "2024年", "type": "短編", "tags": ["恋愛", "青春", "学生"]}, {"title": "許されぬ愛", "year": "2004年", "type": "ショートドラマ", "tags": ["恋愛", "サスペンス", "ファンタジー", "アクション"]}, {"title": "マッチプレイ", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "君を味わいたい", "year": "2023年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "ラブ・アポカリプス", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛"]}, {"title": "サマーインディゴ", "year": "2024年", "type": "短編", "tags": ["恋愛", "学生"]}, {"title": "バディボーイ", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "学生", "サスペンス"]}, {"title": "ラブストライク", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "先輩、全部偶然ですか？", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "男装秘書", "year": "2025年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "法律事務所の弁護士と秘書", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "コメディ"]}, {"title": "ブラッドメイト", "year": "2024年", "type": "ショートドラマ", "tags": ["恋愛", "ファンタジー"]}, {"title": "ヒーローではないけれど", "year": "2024年", "type": "長編", "tags": ["恋愛", "家族", "ファンタジー"]}, {"title": "告白ヒストリー", "year": "2025年", "type": "映画", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "いつかの君に", "year": "2023年", "type": "長編", "tags": ["恋愛", "青春", "学生", "サスペンス", "ミステリー", "ファンタジー"]}, {"title": "社内お見合い", "year": "2022年", "type": "長編", "tags": ["恋愛", "コメディ"]}, {"title": "私の完璧な秘書", "year": "2025年", "type": "長編", "tags": ["恋愛", "コメディ"]}, {"title": "最高の一発〜時空を超えて〜", "year": "2017年", "type": "長編", "tags": ["恋愛", "家族", "青春", "コメディ", "ファンタジー"]}, {"title": "ヒエラルキー", "year": "2024年", "type": "長編", "tags": ["恋愛", "学生", "サスペンス"]}, {"title": "ヤクザの俺が高校生になった", "year": "2024年", "type": "長編", "tags": ["青春", "学生", "コメディ", "ファンタジー", "アクション"]}, {"title": "人間レッスン", "year": "2020年", "type": "長編", "tags": ["学生", "サスペンス"]}, {"title": "殺人者のパラドックス", "year": "2024年", "type": "長編", "tags": ["サスペンス", "ミステリー", "アクション"]}, {"title": "マイシークレットヴァンパイア", "year": "2025年", "type": "短編", "tags": ["恋愛", "ファンタジー"]}, {"title": "キリゴ", "year": "2024年", "type": "長編", "tags": ["恋愛", "青春", "ファンタジー"]}, {"title": "椿の花咲く頃", "year": "2019年", "type": "長編", "tags": ["恋愛", "家族", "学生", "サスペンス", "ミステリー", "コメディ"]}, {"title": "素晴らしき新世界", "year": "2026年", "type": "長編", "tags": ["恋愛", "サスペンス", "アクション"]}, {"title": "鉄槌教師", "year": "2026年", "type": "長編", "tags": ["青春", "学生", "アクション"]}, {"title": "キング・ザ・ランド", "year": "2023年", "type": "長編", "tags": ["恋愛", "コメディ"]}, {"title": "ムービング", "year": "2023年", "type": "長編", "tags": ["恋愛", "家族", "青春", "学生", "ファンタジー", "アクション"]}, {"title": "ザ・グローリー〜輝かしき復讐〜", "year": "2022年（Part1）/2023年（Part2）", "type": "長編", "tags": ["サスペンス", "ミステリー"]}, {"title": "イカゲーム", "year": "2021年（S1）/2024年（S2）", "type": "長編", "tags": ["サスペンス", "アクション"]}, {"title": "他人は地獄だ", "year": "2019年", "type": "長編", "tags": ["サスペンス", "ミステリー"]}, {"title": "恋するムービー", "year": "2025年", "type": "長編", "tags": ["恋愛", "青春", "コメディ"]}, {"title": "雷雲と雨風", "year": "2024年", "type": "短編", "tags": ["恋愛"]}, {"title": "You make me dance〜紅緑", "year": "2021年", "type": "短編", "tags": ["恋愛", "青春"]}, {"title": "ボールボーイ・タクティクス", "year": "2025年", "type": "短編", "tags": ["恋愛", "青春", "学生", "コメディ"]}, {"title": "マイネーム: 偽りと復習", "year": "2021年", "type": "長編", "tags": ["サスペンス"]}, {"title": "大都会の愛し方", "year": "2024年", "type": "長編", "tags": ["恋愛", "青春", "アクション"]}];
+
+const TMDB_PROXY = "https://kdrama-tmdb-api.koasuke111303.workers.dev";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342/";
+const tmdbExcluded = new Set([]);
+
+// 一度正しい作品を確認できたものは、邦題検索ではなくTMDB IDで固定。
+const tmdbFixed = {
+  "2人の恋は場合の数": {id:108146, type:"tv"},
+  "ナミブ-砂漠と海の夢-": {id:246740, type:"tv"},
+  "Blueming〜君に染まる": {id:195840, type:"tv"},
+  "ジャズのように": {id:247760, type:"tv"},
+  "私の完璧な秘書": {id:233100, type:"tv"},
+  "最高の一発〜時空を超えて〜": {id:71871, type:"tv"},
+  "マイネーム: 偽りと復習": {id:110356, type:"tv"},
+  "大都会の愛し方": {id:236956, type:"tv"},
+  "君を味わいたい": {id:309898, type:"tv"},
+  "ラブ・アポカリプス": {id:261064, type:"tv"},
+  "サマーインディゴ": {id:314474, type:"tv"},
+  "バディボーイ": {id:317223, type:"tv"},
+  "ラブストライク": {id:307499, type:"tv"},
+  "先輩、それ全部偶然ですか？": {id:308705, type:"tv"},
+  "先輩、全部偶然ですか？": {id:308705, type:"tv"},
+  "男装秘書": {id:305778, type:"tv"},
+  "法律事務所の弁護士と秘書": {id:313213, type:"tv"},
+  "ブラッドメイト": {id:313308, type:"tv"},
+  "素晴らしき新世界": {id:303143, type:"tv"}
+};
+
+// TMDBにはあるが邦題検索で拾いにくい作品は、英題・原題で検索。
+const tmdbAliases = {
+  "ラブトラクター": "Love Tractor",
+  "ああっ！僕のアシさま": "Oh! My Assistant",
+  "マッチプレイ": "Match Play",
+  "マイシークレットヴァンパイア": "My Secret Vampire",
+  "You make me dance〜紅緑": "You Make Me Dance"
+};
+
+const state = {year:[], type:[], tag:[], q:""};
+
+const years = [...new Set(dramas.flatMap(x => (x.year.match(/\d{4}年/g) || [])))].sort((a,b)=>parseInt(b)-parseInt(a));
+const types = [...new Set(dramas.map(x=>x.type).filter(Boolean))];
+const tags = [...new Set(dramas.flatMap(x=>x.tags))];
+
+function makeButtons(id, values, key){
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  const all = ["すべて", ...values];
+  all.forEach(v=>{
+    const b=document.createElement("button");
+    b.textContent=v;
+    const isAll = v === "すべて";
+    const isActive = isAll ? state[key].length === 0 : state[key].includes(v);
+    if(isActive)b.classList.add("active");
+    b.onclick=()=>{
+      if(isAll) state[key]=[];
+      else if(state[key].includes(v)) state[key]=state[key].filter(x=>x!==v);
+      else state[key].push(v);
+      renderFilters(); render();
+    };
+    el.appendChild(b);
+  });
+}
+function renderFilters(){
+  makeButtons("yearFilters", years, "year");
+  makeButtons("typeFilters", types, "type");
+  makeButtons("tagFilters", tags, "tag");
+}
+function filtered(){
+  return dramas.filter(d=>{
+    const q=state.q.trim().toLowerCase();
+    const okQ=!q || d.title.toLowerCase().includes(q);
+    const dramaYears=d.year.match(/\d{4}年/g)||[];
+    const okY=state.year.length===0 || state.year.every(y=>dramaYears.includes(y));
+    const okT=state.type.length===0 || state.type.every(t=>d.type===t);
+    const okTag=state.tag.length===0 || state.tag.every(t=>d.tags.includes(t));
+    return okQ&&okY&&okT&&okTag;
+  });
+}
+function render(){
+  const list=filtered();
+  document.getElementById("count").textContent=`${list.length}作品`;
+  const grid=document.getElementById("grid");
+  const empty=document.getElementById("empty");
+  grid.innerHTML="";
+  empty.style.display=list.length?"none":"block";
+  list.forEach(d=>{
+    const card=document.createElement("article");
+    card.className="card";
+    const poster = d.poster
+      ? `<img class="poster" src="${escapeHtml(d.poster)}" alt="${escapeHtml(d.title)} ポスター" loading="lazy">`
+      : `<div class="posterPlaceholder" data-poster-for="${escapeHtml(d.title)}">${tmdbExcluded.has(d.title) ? "画像なし" : "読込中…"}</div>`;
+    card.innerHTML=`
+      <div class="cardBody">
+        ${poster}
+        <div class="cardText">
+          <div class="year">${escapeHtml(d.year)}</div>
+          <div class="title">${escapeHtml(d.title)}</div>
+          <div class="type">${escapeHtml(d.type||"作品")}</div>
+          <div class="tags">${d.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
+        </div>
+      </div>`;
+    card.addEventListener("click",()=>openDetail(d));
+    grid.appendChild(card);
+  });
+  list.forEach(loadPoster);
+}
+
+function firstYear(d){
+  const m=String(d.year).match(/\d{4}/);
+  return m ? Number(m[0]) : null;
+}
+function chooseBestTmdbResult(d, results){
+  if(!Array.isArray(results)||!results.length)return null;
+  const year=firstYear(d);
+  const ranked=results.map(r=>{
+    const ry=Number(String(r.first_air_date||r.release_date||"").slice(0,4))||null;
+    let score=0;
+    if(r.origin_country?.includes("KR")||r.original_language==="ko")score+=6;
+    if(year&&ry===year)score+=5;
+    if(r.poster_path)score+=2;
+    return {r,score};
+  }).sort((a,b)=>b.score-a.score);
+  return ranked[0]?.score>=6 ? ranked[0].r : null;
+}
+async function loadPoster(d){
+  if(d.poster||tmdbExcluded.has(d.title)||d.posterLoading)return;
+  d.posterLoading=true;
+  try{
+    const fixed = tmdbFixed[d.title];
+    const mediaType = fixed?.type || (d.type==="映画" ? "movie" : "tv");
+    let response;
+    let best;
+
+    if(fixed){
+      response = await fetch(`${TMDB_PROXY}?id=${fixed.id}&type=${mediaType}`);
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      best = await response.json();
+    }else{
+      const searchTitle = tmdbAliases[d.title] || d.title;
+      response = await fetch(`${TMDB_PROXY}?query=${encodeURIComponent(searchTitle)}&type=${mediaType}`);
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      best = chooseBestTmdbResult(d,data.results);
+    }
+    if(best?.poster_path){
+      d.poster=`${TMDB_IMAGE_BASE}${best.poster_path}`;
+      d.tmdbId=best.id;
+      document.querySelectorAll(`[data-poster-for="${CSS.escape(d.title)}"]`).forEach(el=>{
+        const img=document.createElement("img");
+        img.className="poster"; img.src=d.poster; img.alt=`${d.title} ポスター`; img.loading="lazy";
+        el.replaceWith(img);
+      });
+    }else{
+      document.querySelectorAll(`[data-poster-for="${CSS.escape(d.title)}"]`).forEach(el=>el.textContent="画像なし");
+    }
+  }catch(e){
+    console.warn("TMDB poster load failed:",d.title,e);
+    document.querySelectorAll(`[data-poster-for="${CSS.escape(d.title)}"]`).forEach(el=>el.textContent="取得失敗");
+  }finally{ d.posterLoading=false; }
+}
+
+
+// 日本で一般的なカタカナ表記を確認できた人物だけ固定。
+// キーはTMDB person IDなので、別作品に出演しても同じ表記を再利用できる。
+const castNames = {
+  25002: { ja: "イ・ビョンホン", ko: "이병헌" },
+  42799: { ja: "ソン・ビョンホ", ko: "손병호" },
+  63442: { ja: "チャ・テヒョン", ko: "차태현" },
+  73249: { ja: "イ・ジョンジェ", ko: "이정재" },
+  74421: { ja: "ソン・ヘギョ", ko: "송혜교" },
+  75914: { ja: "ソ・ヨンヒ", ko: "서영희" },
+  77282: { ja: "イ・ソジン", ko: "이서진" },
+  83012: { ja: "キム・ハヌル", ko: "김하늘" },
+  83036: { ja: "パク・ボヨン", ko: "박보영" },
+  83637: { ja: "ホ・ジュノ", ko: "허준호" },
+  84788: { ja: "キム・ムヨル", ko: "김무열" },
+  87090: { ja: "チョン・ホジン", ko: "천호진" },
+  87553: { ja: "キム・ヨジン", ko: "김여진" },
+  88876: { ja: "リュ・スンボム", ko: "류승범" },
+  93996: { ja: "チャン・ヨンナム", ko: "장영남" },
+  93999: { ja: "パク・ヒスン", ko: "박희순" },
+  96659: { ja: "アン・ネサン", ko: "안내상" },
+  109060: { ja: "カン・シニル", ko: "강신일" },
+  112785: { ja: "チョン・ウンイン", ko: "정웅인" },
+  118667: { ja: "キム・ヒジョン", ko: "김희정" },
+  118977: { ja: "キム・ジソク", ko: "김지석" },
+  123820: { ja: "キム・サンホ", ko: "김상호" },
+  126478: { ja: "キム・ヘジャ", ko: "김혜자" },
+  126881: { ja: "コン・ヒョジン", ko: "공효진" },
+  127564: { ja: "チョ・インソン", ko: "조인성" },
+  127566: { ja: "イ・ギウ", ko: "이기우" },
+  127706: { ja: "キム・ソヒョン", ko: "김서형" },
+  127798: { ja: "チェ・ミンス", ko: "최민수" },
+  127848: { ja: "チェ・ジノ", ko: "최진호" },
+  140289: { ja: "チョン・ギョンホ", ko: "정경호" },
+  141541: { ja: "ユン・ジェムン", ko: "윤제문" },
+  141548: { ja: "イ・ソンミン", ko: "이성민" },
+  145999: { ja: "オ・マンソク", ko: "Oh Man-seok" },
+  150697: { ja: "コ・チャンソク", ko: "고창석" },
+  150698: { ja: "ソン・ジュンギ", ko: "송중기" },
+  224673: { ja: "キム・グァンギュ", ko: "김광규" },
+  227638: { ja: "リュ・スンリョン", ko: "류승룡" },
+  231476: { ja: "イ・ギョンヨン", ko: "이경영" },
+  231480: { ja: "ソ・テファ", ko: "서태화" },
+  240081: { ja: "チェ・ムソン", ko: "최무성" },
+  240145: { ja: "ハン・ヒョジュ", ko: "한효주" },
+  240948: { ja: "ムン・ソングン", ko: "문성근" },
+  496935: { ja: "ソン・ビョンスク", ko: "성병숙" },
+  550683: { ja: "キム・ヒウォン", ko: "김희원" },
+  552069: { ja: "ユン・ジュサン", ko: "윤주상" },
+  566375: { ja: "チョ・ジェユン", ko: "조재윤" },
+  582130: { ja: "キム・ジウォン", ko: "김지원" },
+  587676: { ja: "パク・ヒョックォン", ko: "박혁권" },
+  936000: { ja: "コ・ドゥシム", ko: "고두심" },
+  974270: { ja: "チョン・ウ", ko: "정우" },
+  980225: { ja: "ラ・ミラン", ko: "라미란" },
+  994300: { ja: "イ・ミド", ko: "이미도" },
+  998412: { ja: "オ・ジョンセ", ko: "오정세" },
+  1010877: { ja: "ハン・ジミン", ko: "한지민" },
+  1014784: { ja: "ペ・スジ", ko: "수지" },
+  1024396: { ja: "キム・ソンギュン", ko: "김성균" },
+  1029156: { ja: "イ・サンヨプ", ko: "이상엽" },
+  1046863: { ja: "イ・ヒジュン", ko: "이희준" },
+  1095818: { ja: "イ・ジョンソク", ko: "이종석" },
+  1113060: { ja: "イ・スンジュン", ko: "이승준" },
+  1134685: { ja: "ソン・ホジュン", ko: "손호준" },
+  1134687: { ja: "ユン・シユン", ko: "윤시윤" },
+  1140210: { ja: "パク・ソンフン", ko: "박성훈" },
+  1203792: { ja: "チョ・ハンチョル", ko: "조한철" },
+  1223134: { ja: "キム・ジェウク", ko: "김재욱" },
+  1229530: { ja: "ユンソナ", ko: "윤손하" },
+  1232904: { ja: "イ・ドクファ", ko: "이덕화" },
+  1238592: { ja: "イ・ドンウク", ko: "이동욱" },
+  1245069: { ja: "コ・ヒョンジョン", ko: "고현정" },
+  1251647: { ja: "オク・テギョン", ko: "옥택연" },
+  1252017: { ja: "チョン・ソミン", ko: "Jung So-min" },
+  1252045: { ja: "ユナ", ko: "윤아" },
+  1254450: { ja: "ホン・ギョンミン", ko: "홍경민" },
+  1254557: { ja: "キム・ユンヘ", ko: "김윤혜" },
+  1254630: { ja: "イ・ジュニョク", ko: "이준혁" },
+  1254975: { ja: "シン・ヒョンビン", ko: "신현빈" },
+  1255392: { ja: "ユン・サンヒョン", ko: "윤상현" },
+  1255881: { ja: "チェ・ウシク", ko: "최우식" },
+  1256347: { ja: "キム・ミンソク", ko: "김민석" },
+  1256360: { ja: "トン・ヒョンベ", ko: "동현배" },
+  1257142: { ja: "イ・セヨン", ko: "이세영" },
+  1257587: { ja: "ノ・ジョンウィ", ko: "노정의" },
+  1257899: { ja: "カン・ハヌル", ko: "강하늘" },
+  1258630: { ja: "チェ・ウォニョン", ko: "최원영" },
+  1263930: { ja: "チョン・ウヒ", ko: "천우희" },
+  1278160: { ja: "キム・ウォネ", ko: "김원해" },
+  1295420: { ja: "ユ・ハボク", ko: "유하복" },
+  1295461: { ja: "パク・ジンジュ", ko: "박진주" },
+  1296713: { ja: "イム・シワン", ko: "임시완" },
+  1299278: { ja: "キム・ヘウン", ko: "김혜은" },
+  1299285: { ja: "キム・ドンジュン", ko: "김동준" },
+  1299287: { ja: "チン・グ", ko: "진구" },
+  1299479: { ja: "イ・ジヌク", ko: "이진욱" },
+  1311205: { ja: "キム・ガウン", ko: "김가은" },
+  1320503: { ja: "イ・ジュノ", ko: "준호" },
+  1329984: { ja: "イム・ジヨン", ko: "임지연" },
+  1332376: { ja: "イ・スリョン", ko: "이수련" },
+  1332468: { ja: "ホ・ドンウォン", ko: "허동원" },
+  1333031: { ja: "コンミョン", ko: "공명" },
+  1335771: { ja: "キム・ヒョンスク", ko: "김현숙" },
+  1344127: { ja: "アン・ドギュ", ko: "안도규" },
+  1353857: { ja: "ソ・イスク", ko: "서이숙" },
+  1354108: { ja: "ソン・ダムビ", ko: "손담비" },
+  1372476: { ja: "キム・ガンヒョン", ko: "김강현" },
+  1374543: { ja: "イ・サンヒ", ko: "이상희" },
+  1385609: { ja: "クァク・ドンヨン", ko: "곽동연" },
+  1401531: { ja: "クローディア・キム", ko: "수현" },
+  1419852: { ja: "パク・ジョンファン", ko: "박종환" },
+  1420868: { ja: "キム・ギョンリョン", ko: "김경룡" },
+  1447699: { ja: "チョン・ジュンギョ", ko: "Jung Joon-gyo" },
+  1459772: { ja: "ナム・ジュヒョク", ko: "남주혁" },
+  1470763: { ja: "チョン・ヘイン", ko: "정해인" },
+  1487428: { ja: "チャン・スンジョ", ko: "장승조" },
+  1488079: { ja: "キム・ドヨン", ko: "김도연" },
+  1493885: { ja: "キム・ミンジェ", ko: "김민재" },
+  1493898: { ja: "ユン・チャニョン", ko: "윤찬영" },
+  1495746: { ja: "ユン・ジウォン", ko: "윤지원" },
+  1496155: { ja: "コ・ウォニ", ko: "고원희" },
+  1523579: { ja: "シン・ヘソン", ko: "신혜선" },
+  1557181: { ja: "ウィ・ハジュン", ko: "위하준" },
+  1557700: { ja: "オンユ", ko: "온유" },
+  1564175: { ja: "チン・ギジュ", ko: "진기주" },
+  1565088: { ja: "キム・ミンギュ", ko: "김민규" },
+  1571598: { ja: "アン・ヒョソプ", ko: "안효섭" },
+  1571617: { ja: "ユン・ジョンフン", ko: "윤종훈" },
+  1572354: { ja: "イ・ジョンウン", ko: "이정은" },
+  1574048: { ja: "ファン・ヨンヒ", ko: "Hwang Young-hee" },
+  1576065: { ja: "シン・ウンス", ko: "신은수" },
+  1579819: { ja: "ハ・ユンギョン", ko: "하윤경" },
+  1583038: { ja: "チェ・リ", ko: "최리" },
+  1586567: { ja: "イ・ヒョヌク", ko: "이현욱" },
+  1588284: { ja: "シン・ジェハ", ko: "신재하" },
+  1591491: { ja: "アン・ボヒョン", ko: "안보현" },
+  1596584: { ja: "チョ・テグァン", ko: "조태관" },
+  1599816: { ja: "シン・ソンハ", ko: "신성하" },
+  1604826: { ja: "チャ・ウヌ", ko: "차은우" },
+  1605872: { ja: "チョン・ダビン", ko: "정다빈" },
+  1614018: { ja: "イン・ギョジン", ko: "인교진" },
+  1615316: { ja: "イ・ハクジュ", ko: "이학주" },
+  1617158: { ja: "チェ・リホ", ko: "최리호" },
+  1654632: { ja: "チャン・ユンジョン", ko: "장윤정" },
+  1655398: { ja: "チャン・ギヨン", ko: "장기용" },
+  1673497: { ja: "パク・ジヨン", ko: "박지영" },
+  1674542: { ja: "イ・チェミン", ko: "이채민" },
+  1676565: { ja: "アン・セハ", ko: "안세하" },
+  1699540: { ja: "リュ・アベル", ko: "류아벨" },
+  1704052: { ja: "イ・ヒョジェ", ko: "이효제" },
+  1715383: { ja: "チョン・サンフン", ko: "정상훈" },
+  1721362: { ja: "ペク・スミン", ko: "Baek Soo-min" },
+  1737904: { ja: "ソ・ジョンヨン", ko: "서정연" },
+  1747532: { ja: "キム・ナムヒ", ko: "김남희" },
+  1761412: { ja: "ソル・イナ", ko: "설인아" },
+  1813385: { ja: "チョン・チェヨン", ko: "정채연" },
+  1834241: { ja: "キム・セジョン", ko: "김세정" },
+  1848761: { ja: "ムン・ジフ", ko: "Moon Ji-hoo" },
+  1875646: { ja: "カン・ミナ", ko: "강미나" },
+  1875711: { ja: "アン・ウンジン", ko: "안은진" },
+  1875784: { ja: "ヨルム", ko: "여름" },
+  1878886: { ja: "ピオ", ko: "피오" },
+  1880885: { ja: "コ・ヘラン", ko: "Ko Hye-ran" },
+  1890307: { ja: "コンチャン", ko: "공찬" },
+  1895561: { ja: "チン・ジュヒョン", ko: "진주형" },
+  1901635: { ja: "ユン・ジソン", ko: "윤지성" },
+  1901640: { ja: "パク・ジフン", ko: "박지훈" },
+  1904058: { ja: "イ・ジュニョン", ko: "이준영" },
+  1929192: { ja: "チャ・ジュヨン", ko: "차주영" },
+  1929194: { ja: "ホン・ギョン", ko: "홍경" },
+  1974983: { ja: "ノ・ジョンヒョン", ko: "노종현" },
+  1983073: { ja: "パク・ギュヨン", ko: "박규영" },
+  1988291: { ja: "オン・ソンウ", ko: "옹성우" },
+  1988598: { ja: "パク・ジヒョン", ko: "박지현" },
+  2033111: { ja: "ペ・ヘソン", ko: "배해선" },
+  2033236: { ja: "キム・ギョンナム", ko: "김경남" },
+  2035488: { ja: "ソン・ソック", ko: "손석구" },
+  2053101: { ja: "ソン・リョン", ko: "성령" },
+  2067860: { ja: "チョン・ヨビン", ko: "전여빈" },
+  2068707: { ja: "ジ・スヨン", ko: "지수연" },
+  2084416: { ja: "ヨム・ヘラン", ko: "염혜란" },
+  2097275: { ja: "チョン・ジフン", ko: "정지훈" },
+  2098632: { ja: "キム・ヨンジン", ko: "김용진" },
+  2104287: { ja: "チョン・ソニ", ko: "전소니" },
+  2112859: { ja: "ハン・ソヒ", ko: "한소희" },
+  2115785: { ja: "キム・シア", ko: "김시아" },
+  2117890: { ja: "ピョン・ウソク", ko: "변우석" },
+  2120582: { ja: "イ・ジヌ", ko: "이진우" },
+  2124512: { ja: "ムン・ヘイン", ko: "문혜인" },
+  2125943: { ja: "コ・ゴンハン", ko: "고건한" },
+  2134257: { ja: "クォン・ウンビン", ko: "권은빈" },
+  2149762: { ja: "ユ・スビン", ko: "유수빈" },
+  2152558: { ja: "キム・ドフン", ko: "김도훈" },
+  2158882: { ja: "チャン・ヘジン", ko: "장혜진" },
+  2169916: { ja: "ユン・ジオン", ko: "윤지온" },
+  2176669: { ja: "ナム・ユンス", ko: "남윤수" },
+  2181746: { ja: "キム・ドンヒ", ko: "김동희" },
+  2207537: { ja: "チャ・ソウォン", ko: "Cha Seo-won" },
+  2208473: { ja: "イ・スンヒョプ", ko: "이승협" },
+  2214888: { ja: "キム・ヘユン", ko: "김혜윤" },
+  2218708: { ja: "ソン・ゴニ", ko: "송건희" },
+  2256407: { ja: "シン・イェウン", ko: "신예은" },
+  2256730: { ja: "カン・マルグム", ko: "강말금" },
+  2285866: { ja: "ソ・ヘウォン", ko: "서혜원" },
+  2287162: { ja: "チェ・ヨンチョン", ko: "Choi Yeon-cheong" },
+  2307598: { ja: "ハン・ソヒョン", ko: "한소현" },
+  2312406: { ja: "ソン・ウヒョン", ko: "손우현" },
+  2312853: { ja: "ハン・ジウォン", ko: "한지원" },
+  2333298: { ja: "ファン・イニョプ", ko: "황인엽" },
+  2334143: { ja: "キム・ジウン", ko: "김지은" },
+  2341408: { ja: "イ・ドヒョン", ko: "이도현" },
+  2359937: { ja: "チョ・ユリ", ko: "조유리" },
+  2377695: { ja: "ペ・ヒョンソン", ko: "배현성" },
+  2402531: { ja: "ユ・インス", ko: "유인수" },
+  2441975: { ja: "キム・グムスン", ko: "김금순" },
+  2452605: { ja: "イ・ドンジュ", ko: "Lee Dong-ju" },
+  2453132: { ja: "クォン・ヒョク", ko: "권혁" },
+  2463266: { ja: "チョン・ヨンジュ", ko: "정영주" },
+  2523069: { ja: "カン・エシム", ko: "강애심" },
+  2544519: { ja: "チャン・ジュンヒョン", ko: "장준현" },
+  2605967: { ja: "カン・フン", ko: "강훈" },
+  2621980: { ja: "リョウン", ko: "려운" },
+  2633250: { ja: "パク・ジュヒョン", ko: "박주현" },
+  2644771: { ja: "パク・ソイ", ko: "박소이" },
+  2658774: { ja: "ハン・ギチャン", ko: "한기찬" },
+  2658775: { ja: "チャン・ウィス", ko: "장의수" },
+  2663919: { ja: "ユン・ビョンヒ", ko: "윤병희" },
+  2674515: { ja: "イ・ギテク", ko: "이기택" },
+  2679649: { ja: "ソ・ジヘ", ko: "서지혜" },
+  2688877: { ja: "ノ・ジェウォン", ko: "노재원" },
+  2716546: { ja: "ソ・イェファ", ko: "서예화" },
+  2751149: { ja: "チャン・ウォンヒョク", ko: "장원혁" },
+  2752543: { ja: "イ・セフィ", ko: "이세희" },
+  2762546: { ja: "コ・チャンビン", ko: "Ko Chan-bin" },
+  2762557: { ja: "キム・ガンミン", ko: "김강민" },
+  2776202: { ja: "ソ・ヒジョン", ko: "소희정" },
+  2781584: { ja: "ポン・ジェヒョン", ko: "봉재현" },
+  2784573: { ja: "アン・ドング", ko: "Ahn Dong-gu" },
+  2791224: { ja: "ヒョン・ウソク", ko: "현우석" },
+  2803827: { ja: "チェ・チャンホ", ko: "최찬호" },
+  2804996: { ja: "チョン・ソンイル", ko: "정성일" },
+  2823631: { ja: "チョン・スンホ", ko: "Cheon Seung-ho" },
+  2870995: { ja: "イ・ウォンジョン", ko: "Lee Won-jeong" },
+  2884339: { ja: "イム・トゥチョル", ko: "Im Too-chul" },
+  2885448: { ja: "パク・ジェチャン", ko: "Park Jae-chan" },
+  2918543: { ja: "チョン・ジェヨン", ko: "전재영" },
+  2934499: { ja: "チュ・ブジン", ko: "주부진" },
+  2950849: { ja: "チン・グォン", ko: "진권" },
+  2959215: { ja: "ウォン・テミン", ko: "원태민" },
+  2959217: { ja: "チュ・ヨンウ", ko: "추영우" },
+  2959875: { ja: "コ・ジェヒョン", ko: "고재현" },
+  2980283: { ja: "チョン・ソイン", ko: "정서인" },
+  2982887: { ja: "ソン・ジウ", ko: "송지우" },
+  2992836: { ja: "イム・チョルス", ko: "임철수" },
+  3003834: { ja: "チャン・リュル", ko: "장률" },
+  3022309: { ja: "キム・ジウン", ko: "김지웅" },
+  3038410: { ja: "キム・シンロク", ko: "김신록" },
+  3038587: { ja: "キム・ソンファ", ko: "김선화" },
+  3095957: { ja: "イ・テビン", ko: "이태빈" },
+  3096717: { ja: "キム・ノジン", ko: "김노진" },
+  3114549: { ja: "イ・ドハ", ko: "Lee Do-ha" },
+  3126573: { ja: "チェ・ヒョヌク", ko: "최현욱" },
+  3129790: { ja: "イ・ソンビン", ko: "Lee Sung-bin" },
+  3138765: { ja: "キム・ガンミン", ko: "김강민" },
+  3154127: { ja: "パク・ユリム", ko: "박유림" },
+  3155113: { ja: "ナム・ギュヒ", ko: "남규희" },
+  3173274: { ja: "チェ・ソアン", ko: "채서안" },
+  3177655: { ja: "イ・ソビン", ko: "Lee Seo-bin" },
+  3186373: { ja: "チャ・ウミン", ko: "차우민" },
+  3198877: { ja: "ソン・ウォニョプ", ko: "송원엽" },
+  3209018: { ja: "イ・ジョンヒョク", ko: "이종혁" },
+  3212104: { ja: "パク・ソハム", ko: "박서함" },
+  3216622: { ja: "チャ・ソンヒョン", ko: "차선형" },
+  3223744: { ja: "キム・ジウ", ko: "김지우" },
+  3234010: { ja: "ソン・ジホ", ko: "송지호" },
+  3244203: { ja: "チェ・スア", ko: "Chae Soo-ah" },
+  3244773: { ja: "キム・ジェウォン", ko: "김재원" },
+  3245268: { ja: "クォン・ダハム", ko: "권다함" },
+  3281025: { ja: "キム・ヌリム", ko: "김누림" },
+  3289678: { ja: "ペク・ジヘ", ko: "백지혜" },
+  3304605: { ja: "チャ・ジェフン", ko: "차재훈" },
+  3322499: { ja: "チェ・シフン", ko: "최시훈" },
+  3391312: { ja: "チ・ヘウォン", ko: "지혜원" },
+  3395559: { ja: "オ・ミンス", ko: "오민수" },
+  3411144: { ja: "ユン・ソビン", ko: "윤서빈" },
+  3417158: { ja: "ソン・ジオ", ko: "Song Ji-oh" },
+  3457656: { ja: "キム・ウォンギ", ko: "Kim Won-gi" },
+  3478195: { ja: "ソ・ヒョミョン", ko: "Seo Hyo-myeong" },
+  3481219: { ja: "ユン・サンジョン", ko: "윤상정" },
+  3481970: { ja: "ユン・サボン", ko: "윤사봉" },
+  3489386: { ja: "カン・ウンビン", ko: "강은빈" },
+  3489388: { ja: "キム・ソビン", ko: "Kim So-bin" },
+  3495015: { ja: "チェ・ミニョン", ko: "최민영" },
+  3495523: { ja: "チョ・ヒョクジュン", ko: "조혁준" },
+  3502252: { ja: "イム・ジソプ", ko: "Lim Ji-sub" },
+  3507757: { ja: "チョン・イェビン", ko: "정예빈" },
+  3555452: { ja: "パク・ボギョン", ko: "박보경" },
+  3610503: { ja: "ムン・ジヨン", ko: "Moon Ji-yong" },
+  3623817: { ja: "キム・ヒアラ", ko: "김히어라" },
+  3661495: { ja: "パク・ヘイン", ko: "박해인" },
+  3666065: { ja: "チェ・スゴン", ko: "Choi Su-geon" },
+  3688121: { ja: "イ・ヒョンジュン", ko: "이현준" },
+  3688122: { ja: "カン・ウジョン", ko: "Kang Woo-jung" },
+  3691680: { ja: "ソ・ジアン", ko: "서지안" },
+  3711571: { ja: "ユン・サンヒョン", ko: "윤상현" },
+  3721348: { ja: "チェ・グァンロク", ko: "최광록" },
+  3757077: { ja: "キム・ソンヒョク", ko: "김성혁" },
+  3790239: { ja: "ヤン・スンビン", ko: "Yang Seung-bin" },
+  3795001: { ja: "ソ・ジェヒ", ko: "서재희" },
+  3803420: { ja: "ペク・ウンヘ", ko: "백은혜" },
+  3807617: { ja: "チェ・ギュリ", ko: "최규리" },
+  3811920: { ja: "ソン・スンヒョン", ko: "송승현" },
+  3832882: { ja: "キ・ソユ", ko: "기소유" },
+  3857731: { ja: "イ・ソイ", ko: "이소이" },
+  3865938: { ja: "ウ・ジハン", ko: "우지한" },
+  3912502: { ja: "リュ・ヘジュン", ko: "류해준" },
+  3932299: { ja: "イ・スンギュ", ko: "이승규" },
+  3933497: { ja: "ハン・ドウ", ko: "한도우" },
+  3943849: { ja: "イム・ジュンヒョク", ko: "Im Joon-hyeok" },
+  3955602: { ja: "オ・ジュンテク", ko: "Oh Jun-taek" },
+  3962466: { ja: "イム・ヒョンテ", ko: "임현태" },
+  3962704: { ja: "ト・ウォン", ko: "Do Won" },
+  3964911: { ja: "ユ・ソンヨン", ko: "Yu Seong-yong" },
+  3964920: { ja: "キム・ソヨン", ko: "Kim So-young" },
+  3965535: { ja: "ホン・ビラ", ko: "홍비라" },
+  3979702: { ja: "オ・ジンソク", ko: "오진석" },
+  3986582: { ja: "イ・ミラ", ko: "이미라" },
+  3987850: { ja: "キム・ヒョンジェ", ko: "김현재" },
+  4030442: { ja: "ピョン・ソンテ", ko: "변성태" },
+  4036185: { ja: "キム・ヒョジョン", ko: "김효정" },
+  4039557: { ja: "イ・フィソ", ko: "이휘서" },
+  4048841: { ja: "イ・ジョンチャン", ko: "이정찬" },
+  4054044: { ja: "ミン・ハラム", ko: "민하람" },
+  4087668: { ja: "ユン・ドジン", ko: "Yoon Do-jin" },
+  4114503: { ja: "キム・ソニョン", ko: "Kim Sun-young" },
+  4130519: { ja: "キ・ヒョヌ", ko: "기현우" },
+  4130524: { ja: "ヤン・ジュンモ", ko: "양준모" },
+  4130529: { ja: "チョ・チャンヒョン", ko: "조찬현" },
+  4130537: { ja: "パク・ヒョンソプ", ko: "박형섭" },
+  4137735: { ja: "イ・ミヌク", ko: "이민욱" },
+  4179822: { ja: "チャン・ヨンジュン", ko: "장영준" },
+  4179823: { ja: "パン・ジンウォン", ko: "Bang Jin Won" },
+  4185856: { ja: "ペ・ナラ", ko: "Bae Na-ra" },
+  4250359: { ja: "チャン・ヨヌ", ko: "장연우" },
+  4286509: { ja: "ホ・ナムジュン", ko: "허남준" },
+  4287641: { ja: "チェ・ジェヒョク", ko: "최재혁" },
+  4292017: { ja: "パク・ヨンウン", ko: "Park Young-un" },
+  4292030: { ja: "イム・ミンホ", ko: "임민호" },
+  4350936: { ja: "シン・ジョンユ", ko: "신정유" },
+  4389486: { ja: "キム・セウォン", ko: "김세원" },
+  4403020: { ja: "チャ・ジュワン", ko: "차주완" },
+  4403022: { ja: "チャ・ウンギ", ko: "차웅기" },
+  4417121: { ja: "キム・ホヨン", ko: "김호영" },
+  4511290: { ja: "チュ・ユンチャン", ko: "Joo Yoon-chan" },
+  4521666: { ja: "パク・ソンギュ", ko: "Park Sung-kyu" },
+  4526663: { ja: "マイク・ヤンツィ", ko: "Mike Yantzi" },
+  4577150: { ja: "ソン・ハンギョム", ko: "송한겸" },
+  4611989: { ja: "チ・ホグン", ko: "지호근" },
+  4611992: { ja: "キム・ジョンハ", ko: "김정하" },
+  4627200: { ja: "キム・ミナ", ko: "Kim Min Ah" },
+  4735683: { ja: "ユ・イアン", ko: "유이안" },
+  4776019: { ja: "イ・ソン", ko: "이선" },
+  4810199: { ja: "ヨンスン", ko: "용승" },
+  4872309: { ja: "イ・ミョンジュン", ko: "이명준" },
+  4894562: { ja: "チョン・ヒョンミン", ko: "Jeon Hyeong Min" },
+  4903385: { ja: "チョン・ソヨン", ko: "전소영" },
+  4914427: { ja: "ハム・サンヒョク", ko: "Ham Sang Hyeok" },
+  4914738: { ja: "チョン・リウ", ko: "정리우" },
+  4996701: { ja: "イ・ウィソプ", ko: "이의섭" },
+  5016646: { ja: "ユ・シン", ko: "유신" },
+  5047237: { ja: "キム・ジュンソ", ko: "김준서" },
+  5047253: { ja: "チャ・ジョンウ", ko: "차정우" },
+  5129203: { ja: "キム・ハニョン", ko: "김한영" },
+  5139165: { ja: "イ・テヒョン", ko: "이태형" },
+  5271324: { ja: "キム・ジユル", ko: "김지율" },
+  5286174: { ja: "ペク・ソンホ", ko: "백선호" },
+  5300779: { ja: "クァク・ゴニ", ko: "곽건희" },
+  5313610: { ja: "パク・ウニョン", ko: "Park Eun-young" },
+  5314289: { ja: "パク・ジヌ", ko: "박진우" },
+  5314564: { ja: "ハン・ジョンフン", ko: "한정훈" },
+  5325573: { ja: "ファン・グンヒョン", ko: "황근형" },
+  5329212: { ja: "キム・ムンギ", ko: "김문기" },
+  5405253: { ja: "パク・シヨン", ko: "박시연" },
+  5455042: { ja: "ヨム・ミンヒョク", ko: "염민혁" },
+  5511880: { ja: "キム・スイン", ko: "김수인" },
+  5527345: { ja: "チェ・ラギョン", ko: "최락영" },
+  5637305: { ja: "イ・ジュヨン", ko: "이주영" },
+  5654514: { ja: "ミン・ユジュン", ko: "민유준" },
+  5661150: { ja: "ソン・ヒリム", ko: "손희림" },
+  5671359: { ja: "キム・フンジュン", ko: "김흥준" },
+  5678291: { ja: "パク・ドンジュ", ko: "박동주" },
+  5678315: { ja: "イ・ドンヨル", ko: "이동열" },
+  5816650: { ja: "ファン・ソンユン", ko: "황성윤" },
+  5820691: { ja: "イ・ジヨン", ko: "이지연" },
+  5927394: { ja: "シン・サンイム", ko: "신상임" },
+  5985964: { ja: "ムン・ダイン", ko: "문다인" },
+  5988746: { ja: "イ・ヘジュン", ko: "이혜준" },
+  5996637: { ja: "チュ・スギョン", ko: "추수경" },
+  6033643: { ja: "リュ・ソンチョル", ko: "류성철" },
+  6054680: { ja: "ユ・ソンユン", ko: "유성윤" },
+  6054684: { ja: "キム・ドンイル", ko: "김동일" },
+  6064189: { ja: "チュ・ジョンボム", ko: "주종범" },
+  6088230: { ja: "チャ・スンユン", ko: "차승윤" },
+  6174452: { ja: "ハン・ジェフン", ko: "한재훈" },
+};
+
+function hasHangul(text){
+  return /[가-힣]/.test(text || "");
+}
+
+function displayCastName(person){
+  const fixed = castNames[person.id];
+  if(fixed){
+    return fixed.ko ? `${fixed.ja} / ${fixed.ko}` : fixed.ja;
+  }
+
+  const name = (person.name || "").trim();
+  const original = (person.original_name || "").trim();
+  return original || name || "名前未登録";
+}
+
+async function fetchTmdbDetail(d){
+  const fixed = tmdbFixed[d.title];
+  const mediaType = fixed?.type || (d.type==="映画" ? "movie" : "tv");
+
+  // IDがまだ保存されていない作品は、まず既存のポスター取得処理でIDを確定。
+  if(!d.tmdbId && fixed?.id) d.tmdbId = fixed.id;
+  if(!d.tmdbId) await loadPoster(d);
+
+  if(!d.tmdbId) return null;
+
+  const response = await fetch(`${TMDB_PROXY}?id=${d.tmdbId}&type=${mediaType}&credits=1`);
+  if(!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.json();
+}
+
+function detailTags(d){
+  return d.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("");
+}
+
+async function openDetail(d){
+  const overlay=document.getElementById("detailOverlay");
+  const content=document.getElementById("detailContent");
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+
+  content.innerHTML=`<div class="detailLoading">読み込み中…</div>`;
+
+  try{
+    const info=await fetchTmdbDetail(d);
+    if(!info){
+      content.innerHTML=`
+        <div class="detailHero">
+          ${d.poster ? `<img class="detailPoster" src="${escapeHtml(d.poster)}" alt="">` : `<div class="detailPosterPlaceholder">画像なし</div>`}
+          <div class="detailInfo">
+            <div class="detailYear">${escapeHtml(d.year)}</div>
+            <div class="detailTitle">${escapeHtml(d.title)}</div>
+            <div class="detailMeta">${escapeHtml(d.type||"作品")}</div>
+          </div>
+        </div>
+        <div class="detailSection"><h3>タグ</h3><div class="tags">${detailTags(d)}</div></div>
+        <div class="detailSection"><h3>あらすじ</h3><p>TMDBから詳細情報を取得できませんでした。</p></div>`;
+      return;
+    }
+
+    const poster=info.poster_path ? `${TMDB_IMAGE_BASE}${info.poster_path}` : d.poster;
+    const genres=(info.genres||[]).map(g=>g.name).filter(Boolean).join("・");
+    const episodes=info.number_of_episodes ? `${info.number_of_episodes}話` : "";
+    const seasons=info.number_of_seasons && info.number_of_seasons>1 ? `${info.number_of_seasons}シーズン` : "";
+    const runtime=Array.isArray(info.episode_run_time) && info.episode_run_time[0] ? `1話 約${info.episode_run_time[0]}分` : "";
+    const meta=[d.type||"作品", genres, seasons, episodes, runtime].filter(Boolean).join(" ｜ ");
+    const overview=(info.overview||"").trim();
+    const cast=(info.credits?.cast||[]).slice(0,8).filter(c=>c.name||c.original_name);
+
+    content.innerHTML=`
+      <div class="detailHero">
+        ${poster ? `<img class="detailPoster" src="${escapeHtml(poster)}" alt="${escapeHtml(d.title)} ポスター">` : `<div class="detailPosterPlaceholder">画像なし</div>`}
+        <div class="detailInfo">
+          <div class="detailYear">${escapeHtml(d.year)}</div>
+          <div class="detailTitle">${escapeHtml(d.title)}</div>
+          <div class="detailMeta">${escapeHtml(meta)}</div>
+        </div>
+      </div>
+
+      <div class="detailSection">
+        <h3>あらすじ</h3>
+        <p>${overview ? escapeHtml(overview) : "日本語のあらすじはまだ登録されていません。"}</p>
+      </div>
+
+      ${cast.length ? `
+      <div class="detailSection">
+        <h3>出演</h3>
+        <div class="detailCast">${cast.map(person=>`<span>${escapeHtml(displayCastName(person))}</span>`).join("")}</div>
+      </div>` : ""}
+
+      <div class="detailSection">
+        <h3>この作品のタグ</h3>
+        <div class="tags">${detailTags(d)}</div>
+      </div>`;
+  }catch(e){
+    console.warn("detail load failed:",d.title,e);
+    content.innerHTML=`<div class="detailLoading">詳細情報の取得に失敗しました。</div>`;
+  }
+}
+
+function closeDetail(){
+  const overlay=document.getElementById("detailOverlay");
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+}
+
+document.getElementById("detailClose").addEventListener("click",closeDetail);
+document.getElementById("detailOverlay").addEventListener("click",e=>{
+  if(e.target.id==="detailOverlay") closeDetail();
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeDetail();
+});
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+const searchInput = document.getElementById("search");
+const searchBtn = document.getElementById("searchBtn");
+
+function doSearch(){
+  state.q = searchInput.value;
+  render();
+}
+
+searchInput.addEventListener("input", doSearch);
+searchInput.addEventListener("change", doSearch);
+searchInput.addEventListener("keyup", e => {
+  if(e.key === "Enter") doSearch();
+});
+searchBtn.addEventListener("click", doSearch);
+
+renderFilters();
+render();
+</script>
+</body>
+</html>
